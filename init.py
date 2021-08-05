@@ -1,8 +1,11 @@
 import argparse
+import sys
 
 import cv2
+import h5py
 import numpy as np
 
+import utils
 from yolo import YOLO
 
 
@@ -30,11 +33,11 @@ def init():
     print('radar_data_len:', radar_data_len)
     print('camera_data_len:', camera_data_len)
     # TODO
-    # if camera_data_len == 0 or radar_data_len == 0:
-    #     print('camera_data or radar_data is empty!')
-    #     sys.exit(0)
-    # factor = (camera_data_len + 1) / radar_data_len
-    factor = 1
+    if camera_data_len == 0 or radar_data_len == 0:
+        print('camera_data or radar_data is empty!')
+        sys.exit(0)
+    factor = (camera_data_len + 1) / radar_data_len
+    print('factor:', factor)
     return args, Detector, colours, cap, outputFile, out, radar_all_in_world, factor
 
 
@@ -52,14 +55,22 @@ def parse_args():
     # 置信度阈值
     parser.add_argument('--det_conf_thresh', default=0.5, type=float)
     # 输入视频数据
-    parser.add_argument('--video', default="input/7_1.mp4")
-    # 输入雷达数据 TODO
-    parser.add_argument('--radar_data_path', default="input/...")
+    parser.add_argument('--video', default="input/1225_17_3.mp4")
+    # 输入雷达数据
+    parser.add_argument('--radar_data_path', default="input/data_XY_1225_Case17_frame0-299.mat")
 
     return parser.parse_args()
 
 
-def read_radar_data(dataPath):
-    radar_all_in_world = []
-    # TODO
-    return radar_all_in_world
+def read_radar_data(data_path):
+    my_file = h5py.File(data_path, 'r')
+    radar_all_in_world = [my_file[element[0]][:] for element in my_file['data_XY']]
+
+    # 插入y轴这一列
+    for index in range(len(radar_all_in_world)):
+        radar_frame = radar_all_in_world[index]
+        y = [utils.car_height for j in range(len(radar_frame))]
+        radar_frame = np.insert(radar_frame, 1, values=y, axis=1)
+        radar_all_in_world[index] = radar_frame
+
+    return radar_all_in_world[0:250]

@@ -58,7 +58,7 @@ def process_radar(image, radar_all_in_world, factor, count):
     im = image.copy()
 
     radar_count = int(count / factor)
-    radar_frame = radar_all_in_world[radar_count, :, :]
+    radar_frame = radar_all_in_world[radar_count]
 
     radar_frame_uv = []
     if len(radar_frame) > 0:
@@ -78,7 +78,7 @@ def process_radar(image, radar_all_in_world, factor, count):
             print(radar_uv)
 
             # 绘制
-            cv2.circle(im, (radar_uv[0] % 1280, radar_uv[1] % 720), 6, (0, 0, 255), thickness=-1)
+            cv2.circle(im, (radar_uv[0] % 1280, radar_uv[1] % 720), 4, (0, 0, 255), thickness=-1)
             radar_frame_uv.append(radar_uv)
 
     return im, radar_frame_uv
@@ -100,11 +100,12 @@ if __name__ == "__main__":
             # 处理image
             im, camera_frame, confidences, classes = process_image(frame, args.det_conf_thresh, colours)
 
-            # 模拟radar数据
-            radar_all_in_world = np.random.randint(1, 100, size=[1000, 2, 4])
+            # # 模拟radar数据
+            # radar_all_in_world = np.random.randint(1, 100, size=[1000, 2, 4])
 
             # 处理radar
             im, radar_frame_uv = process_radar(im, radar_all_in_world, factor, count)
+
             # # fusion
             # fusion_in_image(camera_frame, confidences, classes, radar_frame_uv)
 
@@ -117,7 +118,6 @@ if __name__ == "__main__":
                 break
         else:
             print("Done processing !!!")
-            print("Output file is stored as ", outputFile)
             break
 
     # 释放视频流

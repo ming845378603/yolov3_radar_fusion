@@ -2,9 +2,12 @@ import math
 
 import numpy as np
 
-out_t = [0, 0, 0]  # tx，ty,tz
-out_angle = [0, 0, 0]  # angle_x，angle_y,angle_z
-in_matrix = [640, 360, 1000, 1500]  # cx,cy,fx,fy
+out_t = [-1, 2, 0]  # tx，ty,tz
+out_angle = [-13, 0, 0]  # angle_x，angle_y,angle_z
+in_matrix = [640, 360, 1500, 400]  # cx,cy,fx,fy
+car_height = 1.5
+camera_height = 2  # 相机地面高度
+camera_angle_a = -1.5  # 相机光抽和水平线夹角
 
 
 def convert_to_world(xyz_args):
@@ -63,9 +66,6 @@ def calculate_depth(rect_roi, intrinsics_array=in_matrix):
     :return:目标的位置
     """
 
-    h = 6  # 相机地面高度
-    angle_a = 0
-
     u0 = intrinsics_array[0]
     v0 = intrinsics_array[1]
     fx = intrinsics_array[2]
@@ -79,20 +79,22 @@ def calculate_depth(rect_roi, intrinsics_array=in_matrix):
 
     op_img = math.fabs(y - v0)
     angle_b = math.atan(op_img / fy)
-    angle_c = angle_a * pi / 180 + angle_b
+    angle_c = camera_angle_a * pi / 180 + angle_b
     if angle_c == 0:
         angle_c = 0.01
 
-    op_camera = round(h / math.tan(angle_c), 1)
+    print('y - v0:', y - v0)
+    print('angle_b:', angle_b)
+    print('angle_c:', angle_c)
 
-    z_in_cam = (h / math.sin(angle_c)) * math.cos(angle_b)
+    op_camera = round(camera_height / math.tan(angle_c), 1)
+
+    z_in_cam = (camera_height / math.sin(angle_c)) * math.cos(angle_b)
     x_in_cam = z_in_cam * (x - u0) / fx
     y_in_cam = z_in_cam * (y - v0) / fy
 
     # 注意，这里的距离是相机到地面投影的点O距离目标的距离
     # 如果是相机到目标的距离，还需要考虑H
-    distance = round(math.sqrt(op_camera ** 2 + x_in_cam ** 2), 2)
-    if distance < 0:
-        distance = "unknown"
+    distance = '%.1f' % z_in_cam
 
-    return np.mat([x_in_cam, y_in_cam, z_in_cam]), str(distance)
+    return np.mat([x_in_cam, y_in_cam, z_in_cam]), distance

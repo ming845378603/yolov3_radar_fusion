@@ -78,8 +78,8 @@ def process_image(frame, det_conf_thresh, colours):
 
 def process_radar(radar_all_in_world, factor, count):
     radar_count = int(count / factor)
-    radar_frame = radar_all_in_world[radar_count, :, :]
-
+    radar_frame = radar_all_in_world[radar_count]
+    print(radar_count)
     return radar_frame
 
 
@@ -89,15 +89,16 @@ def fusion_in_radar(camera_frame, confidences, classes, radar_frame):
     plt.xlabel('x')
     plt.ylabel('z')
     plt.xlim(xmax=50, xmin=-50)
-    plt.ylim(ymax=100, ymin=0)
+    plt.ylim(ymax=200, ymin=0)
+    plt.title('Fusion In Radar Coordinate', fontsize='large', fontweight='bold', verticalalignment='center')
     colors1 = '#00CED1'  # 点的颜色
     colors2 = '#DC143C'
     area = np.pi * 4 ** 2  # 点面积
-    print('camera_frame:', camera_frame)
-    print('radar_frame:', radar_frame)
     plt.ion()
-    plt.scatter(camera_frame[:, 0], camera_frame[:, 2], s=area, c=colors1, alpha=0.4, label='camera')
-    plt.scatter(radar_frame[:, 0], radar_frame[:, 2], s=area, c=colors2, alpha=0.4, label='radar')
+    if len(camera_frame) > 0:
+        plt.scatter(camera_frame[:, 0], camera_frame[:, 2], s=area, c=colors2, alpha=0.4, label='camera')
+    if len(radar_frame) > 0:
+        plt.scatter(radar_frame[:, 0], radar_frame[:, 2], s=area, c=colors1, alpha=0.4, label='radar')
     plt.legend()
     plt.show()
 
@@ -112,8 +113,6 @@ if __name__ == "__main__":
         if ret:
             # 处理camera
             im, camera_frame, confidences, classes = process_image(frame, args.det_conf_thresh, colours)
-            # 模拟radar数据
-            radar_all_in_world = np.random.randint(1, 50, size=[1000, 2, 4])
             # 处理radar
             radar_frame = process_radar(radar_all_in_world, factor, count)
             # fusion
